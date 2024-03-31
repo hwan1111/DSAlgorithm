@@ -74,7 +74,14 @@ class DoubleLinkedList:
                 index = self.countDNode() + index
                 if index < 0:
                     raise IndexError("Index out of range")
-            elif index > self.countDNode():
+                elif index == 0:
+                    self.prepend(data)
+                elif index == self.countDNode() - 1:
+                    self.append(data)
+                else:
+                    prev_node = self[index]
+                    self.append(data, prev_node=prev_node)
+            elif index >= self.countDNode():
                 raise IndexError("Index out of range")
             elif index == 0:
                 self.prepend(data)
