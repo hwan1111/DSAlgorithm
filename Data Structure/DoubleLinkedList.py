@@ -11,11 +11,28 @@ class DoubleLinkedList:
     def __init__(self):
         self.head = None    # 첫 번째 노드
         self.tail = None    # 마지막 노드
-    
+
+    # 인덱스로 노드 접근
+    def __getitem__(self, index):
+        if index < 0:
+            index = self.countDNode() + index
+            if index < 0:
+                raise IndexError("Index out of range")
+
+        current_node = self.head
+        count = 0
+
+        while current_node:
+            if count == index:
+                return current_node
+            current_node = current_node.next
+            count += 1
+        raise IndexError("Index out of range")
+
     # 빈 리스트 판단 여부 메서드
     def isEmpty(self):
         return self.head == None
-    
+
     # 탐색: 노드의 총 개수(count)
     def countDNode(self) -> int:
         if self.isEmpty(): return 0
@@ -26,38 +43,73 @@ class DoubleLinkedList:
             current_node = current_node.next
 
         return count
-    
+
     # 탐색: 첫 번째 노드
     def frontDNode(self):
         if self.isEmpty(): return None
         return self.head
-    
+
     # 탐색: 마지막 노드
     def rearDNode(self):
         if self.isEmpty(): return None
         return self.tail
-    
-    # 삽입
-    def insert(self, data, prev_node=None):
+
+    # 삽입 (인덱스 기반 접근, 데이터 기반 접근, 직접 위치 지정 기반 접근)
+    def append(self, data, index=None, target_data=None, prev_node=None):
         new_node = DNode(data)
-        if prev_node is None:
+
+        # 모든 인자가 None인 경우 맨 마지막 삽입
+        if index is None and target_data is None and prev_node is None:
             if self.head is None:
                 self.head = new_node
                 self.tail = new_node
+                return
             else:
                 self.tail.next = new_node
                 new_node.prev = self.tail
                 self.tail = new_node
-        else:
+        # index가 None이 아닌 경우 index위치에 삽입
+        elif index is not None:
+            if index < 0:
+                index = self.countDNode() + index
+                if index < 0:
+                    raise IndexError("Index out of range")
+            elif index > self.countDNode():
+                raise IndexError("Index out of range")
+            elif index == 0:
+                self.prepend(data)
+            elif index == self.countDNode() - 1:
+                self.append(data)
+            else:
+                prev_node = self[index - 1]
+                self.append(data, prev_node=prev_node)
+        # target_data가 None이 아닌 경우 해당 데이터 뒤에 삽입
+        elif target_data is not None:
+            current_node = self.head
+            while current_node:
+                if current_node.data == target_data:
+                    new_node.prev = current_node
+                    new_node.next = current_node.next
+
+                    if current_node.next is not None:
+                        current_node.next.prev = new_node
+                    else:
+                        self.tail = new_node
+
+                    current_node.next = new_node
+                    return
+                current_node = current_node.next
+            raise ValueError("Target data not found in the list")
+        #prev_node가 None이 아닌 경우에는 prev_node 다음에 삽입
+        elif prev_node is not None:
             new_node.next = prev_node.next
             prev_node.next = new_node
             new_node.prev = prev_node
-
             if new_node.next is not None:
                 new_node.next.prev = new_node
             else:
                 self.tail = new_node
-    
+
     # 삽입: 첫 번째 노드
     def prepend(self, data):
         new_node = DNode(data)
@@ -70,33 +122,68 @@ class DoubleLinkedList:
             new_node.next = self.head
             self.head = new_node
 
-    # 삭제
-    def remove_node(self, node):
-        if self.isEmpty() : return
-
-        # 삭제할 노드가 리스트에 속하는지 확인
-        if node not in self:
-            raise ValueError("Node not found in the list")
-
-        # 노드가 리스트에 하나만 남아 있는 경우
-        if self.head == self.tail:
-            self.head = None
-            self.tail = None
-        else:
-            # 삭제할 노드가 head인 경우
-            if node == self.head:
-                self.head = node.next
-            # 삭제할 노드가 tail인 경우
-            elif node == self.tail:
-                self.tail = node.prev
-            # 삭제할 노드가 중간에 위치한 경우
+    # 삭제 (인덱스 기반 접근, 데이터 기반 접근, 직접 위치 지정 기반 접근)
+    def pop(self, index=None, target_data=None, node=None):
+        if self.isEmpty(): return
+        # 인자가 모두 None이면 맨 마지막 노드 삭제
+        if index is None and target_data is None and node is None:
+            if self.tail is None:
+                return
             else:
-                node.prev.next = node.next
-                node.next.prev = node.prev
+                node_to_remove = self.tail
+                if self.head == self.tail:  # 리스트에 노드가 하나만 있는 경우
+                    self.head = None
+                    self.tail = None
+                else:   # 리스트에 노드가 여러 개 있는 경우
+                    self.tail = self.tail.prev
+                    self.tail.next = None
+                node_to_remove.prev = None
+                return
+        # index가 None이 아닌 경우 해당 인덱스의 노드 삭제
+        elif index is not None:
+            if index < 0:
+                index = self.countDNode() + index
+                if index < 0:
+                    raise IndexError("Index out of range")
+            elif index >= self.countDNode():
+                raise IndexError("Index out of range")
 
-        # 삭제된 노드의 연결을 끊음
-        node.prev = None
-        node.next = None
+            node_to_remove = self[index]
+
+        # target_data가 None이 아닌 경우 해당 데이터를 가진 노드 삭제
+        elif target_data is not None:
+            current_node = self.head
+            while current_node:
+                if current_node.data == target_data:
+                    node_to_remove = current_node
+                    break
+                current_node = current_node.next
+            else:
+                raise ValueError("Target data not found in the list")
+
+        # node가 None이 아닌 경우 해당 노드 삭제
+        elif node is not None:
+            node_to_remove = node
+
+        # 삭제할 노드가 리스트의 맨 앞에 있는 경우
+        if node_to_remove == self.head:
+            self.head = node_to_remove.next
+            if self.head is not None:
+                self.head.prev = None
+            else:   # 리스트에 노드가 하나밖에 없는 경우
+                self.tail = None
+        # 삭제할 노드가 리스트의 맨 끝에 있는 경우
+        elif node_to_remove == self.tail:
+            self.tail = node_to_remove.prev
+            self.tail.next = None
+        # 삭제할 노드가 리스트의 중간에 있는 경우
+        else:
+            node_to_remove.prev.next = node_to_remove.next
+            node_to_remove.next.prev = node_to_remove.prev
+
+        # 삭제된 노드의 연결을 끊는 작업
+        node_to_remove.prev = None
+        node_to_remove.next = None
 
     # 리스트의 전체 노드 출력
     def printDLinkedList(self):
