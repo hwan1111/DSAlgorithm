@@ -1,10 +1,10 @@
-def selectionSort(arr):
+def SelectionSort(arr):
     for i in range(len(arr)):
-        smIndex = i
+        k = i
         for j in range(i, len(arr)):
-            if arr[smIndex] > arr[j]:
-                smIndex = j
+            if arr[k] > arr[j]:
+                k = j
 
-        arr[smIndex], arr[i] = arr[i], arr[smIndex]
+        arr[k], arr[i] = arr[i], arr[k]
 
     return arr
