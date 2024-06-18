@@ -1,32 +1,31 @@
-def mergeSort(arr):
-    if len(arr) > 1:
-        mid = len(arr) // 2 # 배열의 중간지점
-        left = arr[:mid]    # 배열의 왼쪽
-        right = arr[mid:]   # 배열의 오른쪽
+def merge_sort(arr):
+    # 배열의 길이가 1 이하이면 이미 정렬된 상태로 반환
+    if len(arr) <= 1:
+        return arr
 
-        mergeSort(left)     # 반쪽 정렬
-        mergeSort(right)    # 반쪽 정렬
+    # 배열을 반으로 나눔
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
 
-        i = j = k = 0
+    # 정렬된 배열을 병합
+    return merge(left, right)
 
-        # 현재 배열을 L[]와 R[]로 복사
-        while i < len(left) and j < len(right):
-            if left[i] < right[j]:
-                arr[k] = left[i]
-                i += 1
-            else:
-                arr[k] = right[j]
-                j += 1
-            k += 1
+def merge(left, right):
+    result = []
+    i = j = 0
 
-        while i < len(left):
-            arr[k] = left[i]
+    # 두 배열을 비교해 작은 요소를 배열에 추가
+    while i < len(left) and j < len(right):
+        if left[i] < right[j]:
+            result.append(left[i])
             i += 1
-            k += 1
-
-        while j < len(right):
-            arr[k] = right[j]
+        else:
+            result.append(right[j])
             j += 1
-            k += 1
-
-    return arr
+    
+    # 남은 요소 추가
+    result.extend(left[i:])
+    result.extend(right[j:])
+    
+    return result
